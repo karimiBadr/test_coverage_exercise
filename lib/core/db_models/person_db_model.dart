@@ -61,14 +61,22 @@ class PersonDBModel extends DBModel {
   Future<PersonDBModel> read({Transaction? tx}) async {
     assert(id != null, 'id required to read');
 
-    final result = await collectionReference().doc(id).get()
-        as DocumentSnapshot<PersonDBModel>;
+    try {
+      final result = await collectionReference().doc(id).get()
+          as DocumentSnapshot<PersonDBModel>;
 
-    if (result.exists) {
-      return result.data() as PersonDBModel;
-    } else {
+      if (result.exists) {
+        return result.data() as PersonDBModel;
+      } else {
+        throw DBException(
+          code: DBExceptionCode.DocumentNotFound,
+        );
+      }
+    } on DBException {
+      rethrow;
+    } catch (e) {
       throw DBException(
-        code: DBExceptionCode.DocumentNotFound,
+        code: DBExceptionCode.Unknown,
       );
     }
   }
@@ -91,6 +99,10 @@ class PersonDBModel extends DBModel {
     } on Exception {
       throw DBException(
         code: DBExceptionCode.Internal,
+      );
+    } catch (e) {
+      throw DBException(
+        code: DBExceptionCode.Unknown,
       );
     }
   }
